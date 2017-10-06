@@ -152,7 +152,7 @@ function RealVuNob(configs) {
         var callbackId = System.generateUniqueId();
 
         /* Change this to your bidder endpoint.*/
-        var baseUrl = Browser.getProtocol() + '//someAdapterEndpoint.com/bid';
+        var baseUrl = Browser.getProtocol() + '//ib.adnxs.com/jpt';
 
         /* ---------------- Craft bid request using the above returnParcels --------- */
 
