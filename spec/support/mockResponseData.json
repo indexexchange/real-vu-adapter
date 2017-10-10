@@ -10,5 +10,12 @@
       "ad": "https://nym1-ib.adnxs.com/ab?e=Test.aspx"
     },
     "callback_uid": "1234567"
+  }],
+  "pass":[{
+    "result":{
+      "cpm":0.0,
+      "ad":""
+    },
+    "callback_uid": "1234567"   
   }]
 }

@@ -154,8 +154,6 @@ function RealVuNob(configs) {
         /* Change this to your bidder endpoint.*/
         var baseUrl = Browser.getProtocol() + '//ib.adnxs.com/jpt';
 
-//console.log('__generateRequestObj() returnParcels:\t'+JSON.stringify(returnParcels)+'\n');
-
         /* ---------------- Craft bid request using the above returnParcels --------- */
         var parcel =  returnParcels[0];      
         queryObj.callback = 'RealVuNob.adResponseCallback';
@@ -165,8 +163,6 @@ function RealVuNob(configs) {
         queryObj.referrer = Browser.getReferrer();
         queryObj.size = Size.arrayToString(parcel.xSlotRef.sizes[0]); 
         /* -------------------------------------------------------------------------- */
-
-//console.log('queryObj:\t'+JSON.stringify(queryObj));
 
         return {
             url: baseUrl,
@@ -225,11 +221,6 @@ function RealVuNob(configs) {
      */
     function __parseResponse(sessionId, adResponse, returnParcels) {
 
-        console.log("__parseResponse  adResponse:\t"+JSON.stringify(adResponse));
-        console.log('__parseResponse  returnParsels:\t'+JSON.stringify(returnParcels));
-
-
-
         var unusedReturnParcels = returnParcels.slice();
 
         /* =============================================================================
@@ -256,9 +247,9 @@ function RealVuNob(configs) {
 __parseResponse  adResponse:  {"result":{"cpm":100,"width":300,"height":250,"creative_id":78825616,"media_type_id":1,"media_subtype_id":1,"ad":"https://nym1-ib.adnxs.com/ab?e=Test.aspx"},"callback_uid":"1234567"}
 __parseResponse  returnParsels: [{"partnerId":"RealVuNob","htSlot":{},"ref":"","xSlotRef":{"placementId":"54321","sizes":[[300,250]],"callbackId":"_3y5w5sanw"},"requestId":"_1507643228036"}]
 */
-        var bid = adResponse;
-
         /* --------------------------------------------------------------------------------- */
+        
+        var bids = adResponse;
 
         for (var j = 0; j < returnParcels.length; j++) {
             var curReturnParcel = returnParcels[j];
@@ -266,7 +257,7 @@ __parseResponse  returnParsels: [{"partnerId":"RealVuNob","htSlot":{},"ref":"","
             /* ----------- Fill this out to find a matching bid for the current parcel ------------- */
             var curBid;
 
-            //QQQ for (var i = 0; i < bids.length; i++) {
+            for (var i = 0; i < bids.length; i++) {
 
                 /**
                  * This section maps internal returnParcels and demand returned from the bid request.
@@ -274,19 +265,17 @@ __parseResponse  returnParsels: [{"partnerId":"RealVuNob","htSlot":{},"ref":"","
                  * is usually some sort of placements or inventory codes. Please replace the someCriteria
                  * key to a key that represents the placement in the configuration and in the bid responses.
                  */
-                if( curReturnParcel.xSlotRef.callbackId === bid.callback_uid ) {
-                    curBid = bid;
-console.log('BINGO!');
+                if( curReturnParcel.xSlotRef.callbackId === bids[i].callback_uid ) {
+                    curBid = bids[i];
                     break;
                 }
-            //QQQ }
+            }
 
             /* ------------------------------------------------------------------------------------*/
 
             /* HeaderStats information */
             var headerStatsInfo = {};
             headerStatsInfo[curReturnParcel.htSlot.getId()] = [curReturnParcel.xSlotName];
-
             /* No matching bid found so its a pass */
             if (!curBid) {
                 if (__profile.enabledAnalytics.requestTime) {
@@ -304,7 +293,7 @@ console.log('BINGO!');
             var bidPrice = curBid.result.cpm; /* the bid price for the given slot */
             var bidSize = [curBid.result.width, curBid.result.height]; /* the size of the given slot */
             var bidCreative = curBid.result.ad; /* the creative/adm for the given slot that will be rendered if is the winner. */
-            //var bidDealId = curBid.dealid; /* the dealId if applicable for this slot. */
+            var bidDealId = 0; //curBid.dealid; /* the dealId if applicable for this slot. */
 
             /* ---------------------------------------------------------------------------------------*/
 
@@ -394,7 +383,7 @@ console.log('BINGO!');
             version: '2.0.0',
             targetingType: 'slot',
             enabledAnalytics: {
-                requestTime: true
+                requestTime: false 
             },
             features: {
                 demandExpiry: {
