@@ -2,6 +2,7 @@
     "timeout": 1000,
     "xSlots": {
         "1": {
+            "partner_id":"DX0D",
             "placementId": "54321",
             "sizes": [
                 [300, 250]

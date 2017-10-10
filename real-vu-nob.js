@@ -51,7 +51,7 @@ function RealVuNob(configs) {
 
     /* Private
      * ---------------------------------- */
-
+    Browser.addScriptTag( Browser.getProtocol() + '//ac.realvu.net/realvu_boost.js', true, null);
     /**
      * Reference to the partner base class.
      *
@@ -148,6 +148,10 @@ function RealVuNob(configs) {
          */
 
         /* ---------------------- PUT CODE HERE ------------------------------------ */
+
+        var parcel = returnParcels[0];      
+        var slotId = parcel.htSlot.getId();
+
         var queryObj = {};
         var callbackId = System.generateUniqueId();
 
@@ -155,7 +159,6 @@ function RealVuNob(configs) {
         var baseUrl = Browser.getProtocol() + '//ib.adnxs.com/jpt';
 
         /* ---------------- Craft bid request using the above returnParcels --------- */
-        var parcel =  returnParcels[0];      
         queryObj.callback = 'RealVuNob.adResponseCallback';
         queryObj.id = parcel.xSlotRef.placementId;  
         queryObj.callback_uid = callbackId; //parcel.requestId; //callbackId;
@@ -279,12 +282,25 @@ __parseResponse  returnParsels: [{"partnerId":"RealVuNob","htSlot":{},"ref":"","
             /* No matching bid found so its a pass */
             if (!curBid) {
                 if (__profile.enabledAnalytics.requestTime) {
-                    //QQQ exception when "mnp test"
-                    //__baseClass._emitStatsEvent(sessionId, 'hs_slot_pass', headerStatsInfo);
+                    __baseClass._emitStatsEvent(sessionId, 'hs_slot_pass', headerStatsInfo);
                 }
                 curReturnParcel.pass = true;
                 continue;
             }
+            /* Do not submit bid if ad unit is out of view */
+            /*
+            var slotId = curReturnParcel.htSlot.getId();
+            var sz = curReturnParcel.xSlotRef.sizes;
+            var twin = Browser.getNearestEntity('top');
+console.log('twin='+twin);
+            if (!twin || !twin.realvu_boost || twin.realvu_boost.addUnitById({partner_id:'DX0D',unit_id:slotId, size:s }) !== 'yes') {
+                if (__profile.enabledAnalytics.requestTime) {
+                    __baseClass._emitStatsEvent(sessionId, 'hs_slot_oov', headerStatsInfo);
+                }
+                curReturnParcel.pass = true;
+                continue;
+            }
+            */
 
             /* ---------- Fill the bid variables with data from the bid response here. ------------*/
             /* Using the above variable, curBid, extract various information about the bid and assign it to

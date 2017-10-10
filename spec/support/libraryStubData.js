@@ -1,6 +1,17 @@
 var partnerStub = require('./partnerStub.js');
 var openRtbStub = require('./openRtbStub.js');
 var libraryStubData = {
+
+    "twin": function() {
+      return true;
+    },
+    "twin.realvu_boost": function(){
+      return true;  
+    },
+    "twin.realvu_boost.addUnitById": function(){
+      return 'yes';
+    },
+
     'bid-transformer.js': function (config) {
         return {
             apply: function (price) {
@@ -23,6 +34,12 @@ var libraryStubData = {
         },
         getLanguage: function () {
             return 'en-US';
+        },
+        addScriptTag: function() {  // igor added from https://github.com/indexexchange/ht-wrapper-certification
+            return 0;   
+        },
+        getNearestEntity: function(entityName){
+          return entityName;
         }
     },
     'classify.js': {
