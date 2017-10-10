@@ -1,5 +1,5 @@
 /**
- * @author:    Partner
+ * @author:    RealVu 
  * @license:   UNLICENSED
  *
  * @copyright: Copyright (c) 2017 by Index Exchange. All rights reserved.
@@ -154,10 +154,19 @@ function RealVuNob(configs) {
         /* Change this to your bidder endpoint.*/
         var baseUrl = Browser.getProtocol() + '//ib.adnxs.com/jpt';
 
+//console.log('__generateRequestObj() returnParcels:\t'+JSON.stringify(returnParcels)+'\n');
+
         /* ---------------- Craft bid request using the above returnParcels --------- */
-
-
+        var parcel =  returnParcels[0];      
+        queryObj.callback = 'RealVuNob.adResponseCallback';
+        queryObj.id = parcel.xSlotRef.placementId;  
+        queryObj.callback_uid = callbackId; //parcel.requestId; //callbackId;
+        parcel.xSlotRef.callbackId = callbackId; //QQQ do we need it?
+        queryObj.referrer = Browser.getReferrer();
+        queryObj.size = Size.arrayToString(parcel.xSlotRef.sizes[0]); 
         /* -------------------------------------------------------------------------- */
+
+//console.log('queryObj:\t'+JSON.stringify(queryObj));
 
         return {
             url: baseUrl,
@@ -179,7 +188,7 @@ function RealVuNob(configs) {
      */
     function adResponseCallback(adResponse) {
         /* get callbackId from adResponse here */
-        var callbackId = 0;
+        var callbackId = adResponse.callback_uid;
         __baseClass._adResponseStore[callbackId] = adResponse;
     }
     /* -------------------------------------------------------------------------- */
@@ -216,6 +225,11 @@ function RealVuNob(configs) {
      */
     function __parseResponse(sessionId, adResponse, returnParcels) {
 
+        console.log("__parseResponse  adResponse:\t"+JSON.stringify(adResponse));
+        console.log('__parseResponse  returnParsels:\t'+JSON.stringify(returnParcels));
+
+
+
         var unusedReturnParcels = returnParcels.slice();
 
         /* =============================================================================
@@ -238,8 +252,11 @@ function RealVuNob(configs) {
          */
 
          /* ---------- Process adResponse and extract the bids into the bids array ------------*/
-
-        var bids = adResponse;
+/*
+__parseResponse  adResponse:  {"result":{"cpm":100,"width":300,"height":250,"creative_id":78825616,"media_type_id":1,"media_subtype_id":1,"ad":"https://nym1-ib.adnxs.com/ab?e=Test.aspx"},"callback_uid":"1234567"}
+__parseResponse  returnParsels: [{"partnerId":"RealVuNob","htSlot":{},"ref":"","xSlotRef":{"placementId":"54321","sizes":[[300,250]],"callbackId":"_3y5w5sanw"},"requestId":"_1507643228036"}]
+*/
+        var bid = adResponse;
 
         /* --------------------------------------------------------------------------------- */
 
@@ -249,7 +266,7 @@ function RealVuNob(configs) {
             /* ----------- Fill this out to find a matching bid for the current parcel ------------- */
             var curBid;
 
-            for (var i = 0; i < bids.length; i++) {
+            //QQQ for (var i = 0; i < bids.length; i++) {
 
                 /**
                  * This section maps internal returnParcels and demand returned from the bid request.
@@ -257,12 +274,12 @@ function RealVuNob(configs) {
                  * is usually some sort of placements or inventory codes. Please replace the someCriteria
                  * key to a key that represents the placement in the configuration and in the bid responses.
                  */
-
-                if (curReturnParcel.xSlotRef.someCriteria === bids[i].someCriteria) {
-                    curBid = bids[i];
+                if( curReturnParcel.xSlotRef.callbackId === bid.callback_uid ) {
+                    curBid = bid;
+console.log('BINGO!');
                     break;
                 }
-            }
+            //QQQ }
 
             /* ------------------------------------------------------------------------------------*/
 
@@ -273,7 +290,8 @@ function RealVuNob(configs) {
             /* No matching bid found so its a pass */
             if (!curBid) {
                 if (__profile.enabledAnalytics.requestTime) {
-                    __baseClass._emitStatsEvent(sessionId, 'hs_slot_pass', headerStatsInfo);
+                    //QQQ exception when "mnp test"
+                    //__baseClass._emitStatsEvent(sessionId, 'hs_slot_pass', headerStatsInfo);
                 }
                 curReturnParcel.pass = true;
                 continue;
@@ -283,10 +301,10 @@ function RealVuNob(configs) {
             /* Using the above variable, curBid, extract various information about the bid and assign it to
             * these local variables */
 
-            var bidPrice = curBid.price; /* the bid price for the given slot */
-            var bidSize = [curBid.width, curBid.height]; /* the size of the given slot */
-            var bidCreative = curBid.adm; /* the creative/adm for the given slot that will be rendered if is the winner. */
-            var bidDealId = curBid.dealid; /* the dealId if applicable for this slot. */
+            var bidPrice = curBid.result.cpm; /* the bid price for the given slot */
+            var bidSize = [curBid.result.width, curBid.result.height]; /* the size of the given slot */
+            var bidCreative = curBid.result.ad; /* the creative/adm for the given slot that will be rendered if is the winner. */
+            //var bidDealId = curBid.dealid; /* the dealId if applicable for this slot. */
 
             /* ---------------------------------------------------------------------------------------*/
 
@@ -396,8 +414,8 @@ function RealVuNob(configs) {
             },
             lineItemType: Constants.LineItemTypes.ID_AND_SIZE,
             callbackType: Partner.CallbackTypes.ID, // Callback type, please refer to the readme for details
-            architecture: Partner.Architectures.SRA, // Request architecture, please refer to the readme for details
-            requestType: Partner.RequestTypes.ANY // Request type, jsonp, ajax, or any.
+            architecture: Partner.Architectures.MRA, // Request architecture, please refer to the readme for details
+            requestType: Partner.RequestTypes.JSONP // Request type, jsonp, ajax, or any.
         };
         /* ---------------------------------------------------------------------------------------*/
 

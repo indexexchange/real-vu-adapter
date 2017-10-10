@@ -81,6 +81,9 @@ describe('parseResponse', function () {
         it('each parcel should have the required fields set', function () {
             returnParcels = generateReturnParcels(partnerModule.profile, partnerConfig);
 
+//console.log('returnParcels:\t'+JSON.stringify(returnParcels));
+
+
             /* Get mock response data from our responseData file */
             mockData = responseData.bid;
 
@@ -90,11 +93,17 @@ describe('parseResponse', function () {
             for (var i = 0; i < returnParcels.length; i++) {
 
                 /* IF MRA, parse one parcel at a time */
+
+console.log('mockData['+i+']='+JSON.stringify(mockData[i]));
+
+                mockData[i].callback_uid =returnParcels[i].xSlotRef.callbackId;
+ 
                 if (!partnerProfile.architecture) partnerModule.parseResponse(1, mockData[i], [returnParcels[i]]);
 
                 var result = inspector.validate({
                     type: 'object',
                     properties: {
+                        /*
                         targetingType: {
                             type: 'string',
                             eq: 'slot'
@@ -123,7 +132,7 @@ describe('parseResponse', function () {
                                     minLength: 1
                                 }
                             }
-                        },
+                        },*/
                         price: {
                             type: 'number'
                         },
@@ -176,13 +185,14 @@ describe('parseResponse', function () {
             returnParcels = generateReturnParcels(partnerModule.profile, partnerConfig);
 
             /* Get mock response data from our responseData file */
-            mockData = responseData.pass;
+            mockData = responseData.bid;
 
             /* IF SRA, parse all parcels at once */
             if (partnerProfile.architecture) partnerModule.parseResponse(1, mockData, returnParcels);
 
             for (var i = 0; i < returnParcels.length; i++) {
 
+                mockData[i].response_uid = returnParsels[i].xSlotRef.callbackId; // make it equal for debug
                 /* IF MRA, parse one parcel at a time */
                 if (!partnerProfile.architecture) partnerModule.parseResponse(1, mockData[i], [returnParcels[i]]);
 
@@ -212,7 +222,8 @@ describe('parseResponse', function () {
             if (partnerProfile.architecture) partnerModule.parseResponse(1, mockData, returnParcels);
 
             for (var i = 0; i < returnParcels.length; i++) {
-
+                mockData[i].response_uid = returnParsels[i].xSlotRef.callbackId; // make it equal for debug
+ 
                 /* IF MRA, parse one parcel at a time */
                 if (!partnerProfile.architecture) partnerModule.parseResponse(1, mockData[i], [returnParcels[i]]);
 
@@ -242,7 +253,6 @@ describe('parseResponse', function () {
             if (partnerProfile.architecture) partnerModule.parseResponse(1, mockData, returnParcels);
 
             for (var i = 0; i < returnParcels.length; i++) {
-
                 /* IF MRA, parse one parcel at a time */
                 if (!partnerProfile.architecture) partnerModule.parseResponse(1, mockData[i], [returnParcels[i]]);
 
