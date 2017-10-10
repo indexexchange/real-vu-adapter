@@ -1,5 +1,5 @@
 /**
- * @author:    Partner
+ * @author:    RealVu 
  * @license:   UNLICENSED
  *
  * @copyright: Copyright (c) 2017 by Index Exchange. All rights reserved.
@@ -51,7 +51,7 @@ function RealVuNob(configs) {
 
     /* Private
      * ---------------------------------- */
-
+    Browser.addScriptTag( Browser.getProtocol() + '//ac.realvu.net/realvu_boost.js', true, null);
     /**
      * Reference to the partner base class.
      *
@@ -148,15 +148,23 @@ function RealVuNob(configs) {
          */
 
         /* ---------------------- PUT CODE HERE ------------------------------------ */
+
+        var parcel = returnParcels[0];      
+        var slotId = parcel.htSlot.getId();
+
         var queryObj = {};
         var callbackId = System.generateUniqueId();
 
         /* Change this to your bidder endpoint.*/
-        var baseUrl = Browser.getProtocol() + '//someAdapterEndpoint.com/bid';
+        var baseUrl = Browser.getProtocol() + '//ib.adnxs.com/jpt';
 
         /* ---------------- Craft bid request using the above returnParcels --------- */
-
-
+        queryObj.callback = 'RealVuNob.adResponseCallback';
+        queryObj.id = parcel.xSlotRef.placementId;  
+        queryObj.callback_uid = callbackId; //parcel.requestId; //callbackId;
+        parcel.xSlotRef.callbackId = callbackId; //QQQ do we need it?
+        queryObj.referrer = Browser.getReferrer();
+        queryObj.size = Size.arrayToString(parcel.xSlotRef.sizes[0]); 
         /* -------------------------------------------------------------------------- */
 
         return {
@@ -179,7 +187,7 @@ function RealVuNob(configs) {
      */
     function adResponseCallback(adResponse) {
         /* get callbackId from adResponse here */
-        var callbackId = 0;
+        var callbackId = adResponse.callback_uid;
         __baseClass._adResponseStore[callbackId] = adResponse;
     }
     /* -------------------------------------------------------------------------- */
@@ -238,10 +246,13 @@ function RealVuNob(configs) {
          */
 
          /* ---------- Process adResponse and extract the bids into the bids array ------------*/
-
-        var bids = adResponse;
-
+/*
+__parseResponse  adResponse:  {"result":{"cpm":100,"width":300,"height":250,"creative_id":78825616,"media_type_id":1,"media_subtype_id":1,"ad":"https://nym1-ib.adnxs.com/ab?e=Test.aspx"},"callback_uid":"1234567"}
+__parseResponse  returnParsels: [{"partnerId":"RealVuNob","htSlot":{},"ref":"","xSlotRef":{"placementId":"54321","sizes":[[300,250]],"callbackId":"_3y5w5sanw"},"requestId":"_1507643228036"}]
+*/
         /* --------------------------------------------------------------------------------- */
+        
+        var bids = adResponse;
 
         for (var j = 0; j < returnParcels.length; j++) {
             var curReturnParcel = returnParcels[j];
@@ -257,8 +268,7 @@ function RealVuNob(configs) {
                  * is usually some sort of placements or inventory codes. Please replace the someCriteria
                  * key to a key that represents the placement in the configuration and in the bid responses.
                  */
-
-                if (curReturnParcel.xSlotRef.someCriteria === bids[i].someCriteria) {
+                if( curReturnParcel.xSlotRef.callbackId === bids[i].callback_uid ) {
                     curBid = bids[i];
                     break;
                 }
@@ -269,7 +279,6 @@ function RealVuNob(configs) {
             /* HeaderStats information */
             var headerStatsInfo = {};
             headerStatsInfo[curReturnParcel.htSlot.getId()] = [curReturnParcel.xSlotName];
-
             /* No matching bid found so its a pass */
             if (!curBid) {
                 if (__profile.enabledAnalytics.requestTime) {
@@ -278,15 +287,29 @@ function RealVuNob(configs) {
                 curReturnParcel.pass = true;
                 continue;
             }
+            /* Do not submit bid if ad unit is out of view */
+            /*
+            var slotId = curReturnParcel.htSlot.getId();
+            var sz = curReturnParcel.xSlotRef.sizes;
+            var twin = Browser.getNearestEntity('top');
+console.log('twin='+twin);
+            if (!twin || !twin.realvu_boost || twin.realvu_boost.addUnitById({partner_id:'DX0D',unit_id:slotId, size:s }) !== 'yes') {
+                if (__profile.enabledAnalytics.requestTime) {
+                    __baseClass._emitStatsEvent(sessionId, 'hs_slot_oov', headerStatsInfo);
+                }
+                curReturnParcel.pass = true;
+                continue;
+            }
+            */
 
             /* ---------- Fill the bid variables with data from the bid response here. ------------*/
             /* Using the above variable, curBid, extract various information about the bid and assign it to
             * these local variables */
 
-            var bidPrice = curBid.price; /* the bid price for the given slot */
-            var bidSize = [curBid.width, curBid.height]; /* the size of the given slot */
-            var bidCreative = curBid.adm; /* the creative/adm for the given slot that will be rendered if is the winner. */
-            var bidDealId = curBid.dealid; /* the dealId if applicable for this slot. */
+            var bidPrice = curBid.result.cpm; /* the bid price for the given slot */
+            var bidSize = [curBid.result.width, curBid.result.height]; /* the size of the given slot */
+            var bidCreative = curBid.result.ad; /* the creative/adm for the given slot that will be rendered if is the winner. */
+            var bidDealId = 0; //curBid.dealid; /* the dealId if applicable for this slot. */
 
             /* ---------------------------------------------------------------------------------------*/
 
@@ -376,7 +399,7 @@ function RealVuNob(configs) {
             version: '2.0.0',
             targetingType: 'slot',
             enabledAnalytics: {
-                requestTime: true
+                requestTime: false 
             },
             features: {
                 demandExpiry: {
@@ -396,8 +419,8 @@ function RealVuNob(configs) {
             },
             lineItemType: Constants.LineItemTypes.ID_AND_SIZE,
             callbackType: Partner.CallbackTypes.ID, // Callback type, please refer to the readme for details
-            architecture: Partner.Architectures.SRA, // Request architecture, please refer to the readme for details
-            requestType: Partner.RequestTypes.ANY // Request type, jsonp, ajax, or any.
+            architecture: Partner.Architectures.MRA, // Request architecture, please refer to the readme for details
+            requestType: Partner.RequestTypes.JSONP // Request type, jsonp, ajax, or any.
         };
         /* ---------------------------------------------------------------------------------------*/
 

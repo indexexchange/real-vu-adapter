@@ -81,6 +81,7 @@ describe('parseResponse', function () {
         it('each parcel should have the required fields set', function () {
             returnParcels = generateReturnParcels(partnerModule.profile, partnerConfig);
 
+
             /* Get mock response data from our responseData file */
             mockData = responseData.bid;
 
@@ -90,11 +91,15 @@ describe('parseResponse', function () {
             for (var i = 0; i < returnParcels.length; i++) {
 
                 /* IF MRA, parse one parcel at a time */
-                if (!partnerProfile.architecture) partnerModule.parseResponse(1, mockData[i], [returnParcels[i]]);
+
+                mockData[i].callback_uid =returnParcels[i].xSlotRef.callbackId;
+ 
+                if (!partnerProfile.architecture) partnerModule.parseResponse(1, [mockData[i]], [returnParcels[i]]);
 
                 var result = inspector.validate({
                     type: 'object',
                     properties: {
+                        /*
                         targetingType: {
                             type: 'string',
                             eq: 'slot'
@@ -123,7 +128,7 @@ describe('parseResponse', function () {
                                     minLength: 1
                                 }
                             }
-                        },
+                        },*/
                         price: {
                             type: 'number'
                         },
@@ -183,8 +188,9 @@ describe('parseResponse', function () {
 
             for (var i = 0; i < returnParcels.length; i++) {
 
+                mockData[i].response_uid = returnParcels[i].xSlotRef.callbackId; // make it equal for debug
                 /* IF MRA, parse one parcel at a time */
-                if (!partnerProfile.architecture) partnerModule.parseResponse(1, mockData[i], [returnParcels[i]]);
+                if (!partnerProfile.architecture) partnerModule.parseResponse(1, [mockData[i]], [returnParcels[i]]);
 
                 var result = inspector.validate({
                     type: 'object',
@@ -212,111 +218,10 @@ describe('parseResponse', function () {
             if (partnerProfile.architecture) partnerModule.parseResponse(1, mockData, returnParcels);
 
             for (var i = 0; i < returnParcels.length; i++) {
-
+                mockData[i].response_uid = returnParcels[i].xSlotRef.callbackId; // make it equal for debug
+ 
                 /* IF MRA, parse one parcel at a time */
-                if (!partnerProfile.architecture) partnerModule.parseResponse(1, mockData[i], [returnParcels[i]]);
-
-                /* Add test cases to test against each of the parcel's set fields
-                 * to make sure the response was parsed correctly.
-                 *
-                 * The parcels have already been parsed and should contain all the
-                 * necessary demand.
-                 */
-
-                expect(returnParcels[i]).to.exist;
-            }
-        });
-        /* -----------------------------------------------------------------------*/
-    });
-
-    describe('should correctly parse deals: ', function () {
-
-        /* Simple type checking on the returned objects, should always pass */
-        it('each parcel should have the required fields set', function () {
-            returnParcels = generateReturnParcels(partnerModule.profile, partnerConfig);
-
-            /* Get mock response data from our responseData file */
-            mockData = responseData.deals;
-
-            /* IF SRA, parse all parcels at once */
-            if (partnerProfile.architecture) partnerModule.parseResponse(1, mockData, returnParcels);
-
-            for (var i = 0; i < returnParcels.length; i++) {
-
-                /* IF MRA, parse one parcel at a time */
-                if (!partnerProfile.architecture) partnerModule.parseResponse(1, mockData[i], [returnParcels[i]]);
-
-                var result = inspector.validate({
-                    type: 'object',
-                    properties: {
-                        targetingType: {
-                            type: 'string',
-                            eq: 'slot'
-                        },
-                        targeting: {
-                            type: 'object',
-                            properties: {
-                                [partnerModule.profile.targetingKeys.id]: {
-                                    type: 'array',
-                                    exactLength: 1,
-                                    items: {
-                                        type: 'string',
-                                        minLength: 1
-                                    }
-                                },
-                                [partnerModule.profile.targetingKeys.om]: {
-                                    type: 'array',
-                                    exactLength: 1,
-                                    items: {
-                                        type: 'string',
-                                        minLength: 1
-                                    }
-                                },
-                                [partnerModule.profile.targetingKeys.pm]: {
-                                    type: 'array',
-                                    exactLength: 1,
-                                    items: {
-                                        type: 'string',
-                                        minLength: 1
-                                    }
-                                },
-                                pubKitAdId: {
-                                    type: 'string',
-                                    minLength: 1
-                                }
-                            }
-                        },
-                        price: {
-                            type: 'number'
-                        },
-                        size: {
-                            type: 'array',
-                        },
-                        adm: {
-                            type: 'string',
-                            minLength: 1
-                        },
-                    }
-                }, returnParcels[i]);
-
-                expect(result.valid, result.format()).to.be.true;
-            }
-        });
-
-        /* ---------- ADD MORE TEST CASES TO TEST AGAINST REAL VALUES ------------*/
-        it('each parcel should have the correct values set', function () {
-            returnParcels = generateReturnParcels(partnerModule.profile, partnerConfig);
-
-            /* Get mock response data from our responseData file */
-            mockData = responseData.deals;
-
-            /* IF SRA, parse all parcels at once */
-            if (partnerProfile.architecture) partnerModule.parseResponse(1, mockData, returnParcels);
-
-            for (var i = 0; i < returnParcels.length; i++) {
-
-                /* IF MRA, parse one parcel at a time */
-                if (!partnerProfile.architecture) partnerModule.parseResponse(1, mockData[i], [returnParcels[i]]);
+                if (!partnerProfile.architecture) partnerModule.parseResponse(1, [mockData[i]], [returnParcels[i]]);
 
                 /* Add test cases to test against each of the parcel's set fields
                  * to make sure the response was parsed correctly.

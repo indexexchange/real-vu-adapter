@@ -1,5 +1,21 @@
 {
-    "bid": [],
-    "pass": [],
-    "deals": []
+  "bid":[{
+    "result": {
+      "cpm": 100,
+      "width": 300,
+      "height": 250,
+      "creative_id": 78825616,
+      "media_type_id": 1,
+      "media_subtype_id": 1,
+      "ad": "https://nym1-ib.adnxs.com/ab?e=Test.aspx"
+    },
+    "callback_uid": "1234567"
+  }],
+  "pass":[{
+    "result":{
+      "cpm":0.0,
+      "ad":""
+    },
+    "callback_uid": "1234567"   
+  }]
 }
